@@ -5,7 +5,7 @@
 # Extracts garages from Statens Vegvesen list of approved garages and produces OSM file for import/update
 # Usage: python garage2osm.py [county]
 # County parameter is two digit county number XX
-# Writes output file to "garagess.osm"
+# Writes output file to "garages_xx.osm"
 # Reads postal/municipality codes from Posten and counties from Kartverket
 
 
