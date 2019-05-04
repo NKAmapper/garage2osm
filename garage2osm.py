@@ -18,7 +18,9 @@ import urllib2
 import re
 
 
-version = "0.1.0"
+version = "0.2.0"
+
+geocoding = True
 
 header = { "User-Agent": "osm-no/garage2osm/" + version }
 
@@ -199,8 +201,6 @@ def geocode (street, house_number, house_letter, city, municipality):
 
 if __name__ == '__main__':
 
-	geocoding = True
-
 	message ("\nAuto repair garages approved by Statens Vegvesen\n")
 	
 	if len(sys.argv) > 1:
@@ -241,7 +241,7 @@ if __name__ == '__main__':
 	else:
 		url += "&query=__ALL__"
 
-	# To-do: KeepAliveTimeout
+	# To-do: Avoid timeout for full country batch (KeepAliveTimeout?)
 
 	file = urllib2.urlopen(url)
 	garages = csv.DictReader(file, fieldnames=['name','street','zip','city','approvals','ref_org'], delimiter=";")
@@ -357,7 +357,11 @@ if __name__ == '__main__':
 
 		approvals_split = approvals.split(", ")
 
-		if (approvals == "HJUL") or (name.lower().find("Dekkmann") >= 0) or (name.find("Vianor") >= 0) or (name.find("Mekonomen") < 0):
+		if ("Dekkmann" in name) or ("Vianor" in name) or ("Dekk1" in name) \
+				or (((approvals == "HJUL") or (approvals == "HJULUTRUSTNING") \
+					or ((len(approvals_split) == 2) and ("HJUL" in approvals_split) and (("HJULUTRUSTNING" in approvals_split) \
+						or ("HENGERESPALOPSBREMSEANLEGG" in approvals_split) and ("Dekk" in name or "dekk" in name)))) \
+				and not("Mekonomen" in name)):
 			make_osm_line ("shop", "tyres")
 		elif approvals == "MOTORSYKKELOGMOPED":
 			make_osm_line ("shop", "motorcycle")
@@ -371,15 +375,15 @@ if __name__ == '__main__':
 			make_osm_line ("hgv:repair", "yes")
 		if "BILGLASS" in approvals_split:
 			make_osm_line ("car:windscreen", "yes")
-		if "HJUL" in approvals_split:
+		if ("HJUL" in approvals_split) or ("HJULUTRUSTNING" in approvals_split):
 			make_osm_line ("car:tyres", "yes")
 		if "BILSKADE" in approvals_split:
 			make_osm_line ("car:bodywork", "yes")
 		if "MTORSYKKELOGMOPED" in approvals_split:
 			make_osm_line ("motorcycle:repair", "yes")
-		if ("TRAKTOR" in approvals_split) or (name.lower().find("traktor") >= 0):
+		if ("TRAKTOR" in approvals_split) or ("traktor" in name):
 			make_osm_line ("agricultural:repair", "yes")
-		if approvals.find("KONTROLL") >= 0:
+		if "KONTROLL" in approvals:
 			make_osm_line ("vehicle_inspection", "yes")
 
 		# Produce tags
